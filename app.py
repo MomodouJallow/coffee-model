@@ -53,7 +53,9 @@ async def predict_image(file: UploadFile = File(...)):
         }
     except Exception as e:
         result = {"error": f"Failed to predict image: {str(e)}"}
+        print("Error occurred:", e)
 
+    print("Result:", result)
     return jsonable_encoder(result)
 
 if __name__ == "__main__":
