@@ -8,9 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from PIL import Image
 
 # Define your class labels
-class_labels = ["miner", "rust", "phoma"]
-
-app = FastAPI()
+class_labels = ["miner", "rust", "phoma disease"]  
 
 # Load TFLite model and allocate tensors
 interpreter = tf.lite.Interpreter(model_path="/content/converted_model.tflite")
@@ -20,8 +18,10 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-# Print input shape for debugging
+# Print input shape
 print("Input shape:", input_details[0]['shape'])
+
+app = FastAPI()
 
 @app.post("/predict/")
 async def predict_image(file: UploadFile = File(...)):
@@ -29,17 +29,14 @@ async def predict_image(file: UploadFile = File(...)):
         # Load and preprocess the image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-
-        # Resize image to the input size required by the model
-        input_size = (input_details[0]['shape'][2], input_details[0]['shape'][1])  # Height and width
-        image.thumbnail(input_size, Image.LANCZOS)  # Use LANCZOS for resampling
+        input_size = (input_details[0]['shape'][2], input_details[0]['shape'][1])
+        image.thumbnail(input_size, Image.LANCZOS)
         image = np.array(image.resize((input_size[0], input_size[1]), Image.LANCZOS), dtype=np.float32)
+        image = image / 255.0
 
         # Create a blank canvas with the required input size
         input_data = np.zeros(input_details[0]['shape'], dtype=np.float32)
-
-        # Overlay the resized image onto the blank canvas
-        input_data[0, :image.shape[0], :image.shape[1], :] = image / 255.0  # Normalize image
+        input_data[0, :image.shape[0], :image.shape[1], :] = image
 
         # Set input tensor
         interpreter.set_tensor(input_details[0]['index'], input_data)
@@ -50,7 +47,7 @@ async def predict_image(file: UploadFile = File(...)):
         # Get output tensor
         output_data = interpreter.get_tensor(output_details[0]['index'])
 
-        # Post-process output if necessary
+        # Post-process output
         predicted_class_index = np.argmax(output_data)
         predicted_class = class_labels[predicted_class_index]
 
@@ -59,10 +56,8 @@ async def predict_image(file: UploadFile = File(...)):
             "confidence_score": float(output_data[0][predicted_class_index])
         }
     except Exception as e:
-        result = {"error": f"Failed to predict image: {str(e)}"}
-        print("Error occurred:", e)
+        result = {"Error": f"Failed to predict image: {str(e)}"}
 
-    print("Result:", result)
     return jsonable_encoder(result)
 
 if __name__ == "__main__":
