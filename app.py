@@ -34,8 +34,13 @@ async def predict_image(file: UploadFile = File(...)):
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
 
+        # Resize image to match the input tensor dimensions of the model
+        interpreter_height = input_details[0]['shape'][1]
+        interpreter_width = input_details[0]['shape'][2]
+        image_resized = tf.image.resize(image, [interpreter_height, interpreter_width])
+
         # Set input tensor
-        interpreter.set_tensor(input_details[0]['index'], [image])
+        interpreter.set_tensor(input_details[0]['index'], image_resized)
 
         # Run inference
         interpreter.invoke()
