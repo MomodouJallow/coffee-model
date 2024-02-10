@@ -8,10 +8,10 @@ from fastapi.encoders import jsonable_encoder
 from PIL import Image
 
 # Define your class labels
-class_labels = ["miner", "rust", "phoma"]  
+class_labels = ["miner", "rust", "phome"]  
 
 # Load TFLite model and allocate tensors
-interpreter = tf.lite.Interpreter(model_path="/content/converted_model.tflite")
+interpreter = tf.lite.Interpreter(model_path="models/converted_model.tflite")
 interpreter.allocate_tensors()
 
 # Get input and output tensors
@@ -50,6 +50,7 @@ async def predict_image(file: UploadFile = File(...)):
         # Post-process output
         predicted_class_index = np.argmax(output_data)
         predicted_class = class_labels[predicted_class_index]
+        #Hello
 
         result = {
             "predicted_class": predicted_class,
