@@ -12,6 +12,11 @@ class_labels = ["miner", "rust", "phome"]
 
 app = FastAPI()
 
+# Constants for preprocessing
+BATCH_SIZE = 16
+IMAGE_SIZE = 256
+CHANNELS = 3
+
 @app.post("/predict/")
 async def predict_image(file: UploadFile = File(...)):
     try:
@@ -20,7 +25,7 @@ async def predict_image(file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(contents)).convert("RGB")
 
         # Resize image to the input size required by the model
-        input_size = (224, 224)  # Example input size, adjust according to your model
+        input_size = (IMAGE_SIZE, IMAGE_SIZE)  # Input size based on your dataset preprocessing
         image = image.resize(input_size, Image.LANCZOS)
 
         # Convert image to numpy array and normalize
@@ -34,13 +39,8 @@ async def predict_image(file: UploadFile = File(...)):
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
 
-        # Resize image to match the input tensor dimensions of the model
-        interpreter_height = input_details[0]['shape'][1]
-        interpreter_width = input_details[0]['shape'][2]
-        image_resized = tf.image.resize(image, [interpreter_height, interpreter_width])
-
         # Set input tensor
-        interpreter.set_tensor(input_details[0]['index'], image_resized)
+        interpreter.set_tensor(input_details[0]['index'], [image])
 
         # Run inference
         interpreter.invoke()
