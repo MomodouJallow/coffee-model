@@ -8,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from PIL import Image
 
 # Define your class labels
-class_labels = ["miner", "rust", "phoma disease"]  
+class_labels = ["miner", "rust", "phoma"]  
 
 # Load TFLite model and allocate tensors
 interpreter = tf.lite.Interpreter(model_path="/content/converted_model.tflite")
