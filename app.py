@@ -18,11 +18,11 @@ async def predict_image(file: UploadFile = File(...)):
         # Load and preprocess the image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-        
+
         # Resize image to the input size required by the model
         input_size = (224, 224)  # Example input size, adjust according to your model
         image = image.resize(input_size, Image.LANCZOS)
-        
+
         # Convert image to numpy array and normalize
         image = np.array(image, dtype=np.float32) / 255.0
 
@@ -52,7 +52,7 @@ async def predict_image(file: UploadFile = File(...)):
             "confidence_score": float(output_data[0][predicted_class_index])
         }
     except Exception as e:
-        result = {"Error": f"Failed to predict image: {str(e)}"}
+        result = {"error": f"Failed to predict image: {str(e)}"}
 
     return jsonable_encoder(result)
 
