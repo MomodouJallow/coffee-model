@@ -33,21 +33,15 @@ async def predict_image(file: UploadFile = File(...)):
         image.thumbnail(input_size, Image.LANCZOS)
         image = np.array(image.resize((input_size[0], input_size[1]), Image.LANCZOS), dtype=np.float32)
         image = image / 255.0
-
-        # Create a blank canvas with the required input size
         input_data = np.zeros(input_details[0]['shape'], dtype=np.float32)
         input_data[0, :image.shape[0], :image.shape[1], :] = image
 
         # Set input tensor
         interpreter.set_tensor(input_details[0]['index'], input_data)
-
-        # Run inference
         interpreter.invoke()
 
         # Get output tensor
         output_data = interpreter.get_tensor(output_details[0]['index'])
-
-        # Post-process output
         predicted_class_index = np.argmax(output_data)
         predicted_class = class_labels[predicted_class_index]
         #Hello
